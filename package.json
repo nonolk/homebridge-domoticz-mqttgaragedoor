@@ -1,5 +1,5 @@
 {
-  "name": "homebridge-mqttgaragedoor",
+  "name": "homebridge-mqttgaragedoor-moppi",
   "version": "1.0.2",
   "description": "Homebridge plugin for MQTT Garage Door Opener",
   "note": "peerDependencies is hardcoded to peerDepdendencies in homebridge!!!",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/iomax/homebridge-mqttgaragedoor"
+    "url": "https://github.com/moppi4483/homebridge-mqttgaragedoor"
   },
   "keywords": [
     "homebridge-plugin",
@@ -30,7 +30,7 @@
   "author": "iomax",
   "license": "GPL2",
   "bugs": {
-    "url": "https://github.com/iomax/homebridge-mqttgaragedoor/issues"
+    "url": "https://github.com/moppi4483/homebridge-mqttgaragedoor/issues"
   },
-  "homepage": "https://github.com/iomax/homebridge-mqttgaragedoor"
+  "homepage": "https://github.com/moppi4483/homebridge-mqttgaragedoor"
 }
