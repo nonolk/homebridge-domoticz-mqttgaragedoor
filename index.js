@@ -133,6 +133,7 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 
 	this.client.on('message', function (topic, message) {
 		var status = message.toString();
+    that.showLog(status)
 		if( topic == that.lwt ) {
 			if ( message == that.lwt_payload ) {
 				that.log("Gone Offline");
