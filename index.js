@@ -18,7 +18,7 @@
 //				"closeStatusCmd": "OPTIONAL THE CLOSED STATUS COMMAND (DEFAULT "")",
 // 			},
 //              "doorRunInSeconds": "OPEN/CLOSE RUN TIME IN SECONDS (DEFAULT 20"),
-//		"pauseInSeconds" : "IF DEFINED : AUTO CLOSE AFTER [Seconds]" 
+//		"pauseInSeconds" : "IF DEFINED : AUTO CLOSE AFTER [Seconds]"
 //     }
 // ],
 //
@@ -49,7 +49,7 @@ function clone(object, extend) {
   return cloned;
 };
 
-function MqttGarageDoorAccessory(log, config) {
+function DomoticzMqttGarageDoorAccessory(log, config) {
   	this.log          	= log;
   	this.name 		= config["name"];
   	this.url 		= config["url"];
@@ -73,21 +73,17 @@ function MqttGarageDoorAccessory(log, config) {
     		rejectUnauthorized: false
 	};
 
-	this.topicStatusSet	= config["topics"].statusSet;
-	this.OpenValue		= ( config["topics"].openValue !== undefined ) ? config["topics"].openValue : "true";
-	this.ClosedValue	= ( config["topics"].closedValue !== undefined ) ? config["topics"].closedValue : "true";
-	this.openStatusCmd	= ( config["topics"].openStatusCmd !== undefined ) ? config["topics"].openStatusCmd : "";
-	this.closeStatusCmd	= ( config["topics"].closeStatusCmd !== undefined ) ? config["topics"].closeStatusCmd : "";
+  this.domoswitch = config["switchid"];
+  this.domostatus = config["statusid"];
+	this.domocmdtopic	= "domoticz/in";
+  this.domostatustopic = "domoticz/out";
+  this.OpenValue		= ( config["topics"].openValue !== undefined ) ? config["topics"].openValue : "on";
+	this.ClosedValue	= ( config["topics"].closedValue !== undefined ) ? config["topics"].closedValue : "off";
+	this.openStatusCmd	= ( config["topics"].openStatusCmd !== undefined ) ? config["topics"].openStatusCmd :"on";
+	this.closeStatusCmd	= ( config["topics"].closeStatusCmd !== undefined ) ? config["topics"].closeStatusCmd : "off";
+  this.doorRunInSeconds 	= (config["doorRunInSeconds"] !== undefined ? config["doorRunInSeconds"] : 20 );
 
-	if( this.topicOpenGet != undefined || this.topicClosedGet != undefined ) {
-		this.lwt = config["lwt"];
-		this.lwt_payload = config["lwtPayload"];
- 	};
-
-	this.doorRunInSeconds 	= (config["doorRunInSeconds"] !== undefined ? config["doorRunInSeconds"] : 20 ); 
-	if( !( this.topicOpenGet !== undefined && this.topicClosedGet !== undefined ) ) this.pauseInSeconds = config["pauseInSeconds"]; 
-
-	this.topicverbose	= config["topics"].showlog;
+		this.topicverbose	= config["topics"].showlog;
 
 	this.Running = false;
 	this.Closed = true;
@@ -111,13 +107,13 @@ function MqttGarageDoorAccessory(log, config) {
 	this.ObstructionDetected.on('get', this.checkReachable.bind(this));
 
 	if (this.lwt !== undefined ) this.reachable = false
-	else this.reachable = true;  
+	else this.reachable = true;
 
     	this.infoService = new Service.AccessoryInformation();
     	this.infoService
-      	   .setCharacteristic(Characteristic.Manufacturer, "Opensource Community")
-           .setCharacteristic(Characteristic.Model, "Homebridge MQTT GarageDoor")
-	   .setCharacteristic(Characteristic.FirmwareRevision,"1.0.2");
+      	   .setCharacteristic(Characteristic.Manufacturer, "Opensource Community and Nonolk")
+           .setCharacteristic(Characteristic.Model, "Homebridge Domoticz MQTT GarageDoor")
+	   .setCharacteristic(Characteristic.FirmwareRevision,"0.0.1");
 //           .setCharacteristic(Characteristic.SerialNumber, "Version 1.0.2");
 
 
@@ -132,9 +128,7 @@ function MqttGarageDoorAccessory(log, config) {
 	// based on idea by [MrBalonio] (https://github.com/mrbalonio)
 	this.client.on('connect', function () {
 		that.log('Subscribing to topics');
- 		if( that.topicOpenGet !== undefined ) that.client.subscribe(that.topicOpenGet);
- 		if( that.topicClosedGet !== undefined ) that.client.subscribe(that.topicClosedGet);
- 		if( that.lwt !== undefined ) that.client.subscribe(that.lwt);
+ 		that.client.subscribe(that.domostatustopic);
 	});
 
 	this.client.on('message', function (topic, message) {
@@ -160,12 +154,12 @@ function MqttGarageDoorAccessory(log, config) {
 				that.garageDoorOpener.addOptionalCharacteristic(Characteristic.StatusFault);
 				that.StatusFault = that.garageDoorOpener.getCharacteristic(Characteristic.StatusFault);
 			};
-			if (topic == that.topicClosedGet) {
+			if (status == that.ClosedValue){
 				var topicGotStatus = (status == that.ClosedValue);
 				that.isClosed( topicGotStatus);
 				if( topicGotStatus ) var NewDoorState = DoorState.CLOSED
                         	else var NewTarget = DoorState.OPEN;
-			} else {
+			} else if (status == that.OpenValue){
 				var topicGotStatus = (status == that.OpenValue);
 				that.isOpen( topicGotStatus);
 				if(topicGotStatus) var NewDoorState = DoorState.OPEN
@@ -182,13 +176,13 @@ function MqttGarageDoorAccessory(log, config) {
 				if ( (that.pauseInSeconds !== undefined) && that.isOpen() ) {
 					that.TimeOut = setTimeout(that.autoClose.bind(that), that.pauseInSeconds * 1000);
 				};
-			} else if (!that.Running && that.DoorStateChanged ) { 
+			} else if (!that.Running && that.DoorStateChanged ) {
                        		that.targetDoorState.setValue( NewTarget, undefined, "fromGetValue");
 			};
 			that.showLog("Final Getting State is " + that.doorStateReadable(that.currentDoorState.value) );
 		}
 	});
-    	
+
     	this.currentDoorState.updateValue( DoorState.CLOSED );
    	this.targetDoorState.updateValue( DoorState.CLOSED );
         this.currentDoorState.getValue();
@@ -199,11 +193,11 @@ module.exports = function(homebridge) {
   	Characteristic = homebridge.hap.Characteristic;
 	DoorState = homebridge.hap.Characteristic.CurrentDoorState;
 
-  	homebridge.registerAccessory("homebridge-mqttgaragedoor", "mqttgaragedoor", MqttGarageDoorAccessory);
+  	homebridge.registerAccessory("homebridge-domoticz-mqttgaragedoor", "domoticzmqttgaragedoor", DomoticzMqttGarageDoorAccessory);
 }
 
-MqttGarageDoorAccessory.prototype = {
-	
+DomoticzMqttGarageDoorAccessory.prototype = {
+
 	doorStateReadable : function( doorState ) {
 		switch (doorState) {
 		case DoorState.OPEN:
@@ -225,7 +219,7 @@ MqttGarageDoorAccessory.prototype = {
                 if( status !== undefined) this.log("Status : " + this.doorStateReadable(status));
 		this.log(" isClosed : " + this.isClosed() + " / " + this.Closed );
 		this.log(" isOpen : " + this.isOpen() + " / " + this.Open );
-		this.log(" currentState (HK) : " + this.doorStateReadable(this.currentDoorState.value) ); 
+		this.log(" currentState (HK) : " + this.doorStateReadable(this.currentDoorState.value) );
 	 	this.log(" targetState (HK) : " + this.doorStateReadable(this.targetDoorState.value) );
 		this.log(" Running : " + this.Running );
 		this.log("----"  );
@@ -247,11 +241,11 @@ MqttGarageDoorAccessory.prototype = {
 			if( status != this.currentDoorState.value ) {
 				this.setObstructionState( false);
 				clearTimeout( this.TimeOut );
-        			this.Running = true; 
+        			this.Running = true;
 				this.TimeOut = setTimeout(this.setFinalDoorState.bind(this), this.doorRunInSeconds * 1000);
 				if ( context !== 'fromGetValue'){
 		        		this.log("Triggering GarageDoor Command");
-					this.client.publish(this.topicStatusSet, "on");
+					this.client.publish(this.domocmdtopic, '{"command": "getdeviceinfo", "idx": '+this.domostatus+' }');
 				};
             			this.currentDoorState.setValue( (status == DoorState.OPEN ?  DoorState.OPENING : DoorState.CLOSING ) );
 			};
@@ -260,11 +254,11 @@ MqttGarageDoorAccessory.prototype = {
 	},
 
 	isClosed: function(status) {
-		if( status !== undefined ) { 
+		if( status !== undefined ) {
 			if( this.Closed !== status  ) {
 				this.DoorStateChanged = true;
 				this.Closed = status;
-                		if( this.topicOpenGet == undefined ) this.Open = ! this.Closed;
+        if( this.domostatustopic == undefined ) this.Open = ! this.Closed;
 			} else this.DoorStateChanged = false;
 		};
 		return(this.Closed);
@@ -275,7 +269,7 @@ MqttGarageDoorAccessory.prototype = {
 			if( this.Open !== status ) {
 				this.DoorStateChanged = true;
 				this.Open = status;
-				if( this.topicClosedGet == undefined ) this.Closed = ! this.Open;
+				if( this.domostatustopic == undefined ) this.Closed = ! this.Open;
 			} else this.DoorStateChanged = false;
 		};
 		return(this.Open);
@@ -289,10 +283,10 @@ MqttGarageDoorAccessory.prototype = {
 
 		switch(this.targetDoorState.value) {
 			case DoorState.OPEN:
-				if(this.topicOpenGet == undefined) this.isOpen(true);
+				if(this.domostatustopic == undefined) this.isOpen(true);
 				break;
 			case DoorState.CLOSED:
-				if(this.topicClosedGet == undefined) this.isClosed(true);
+				if(this.domostatustopic == undefined) this.isClosed(true);
 				break;
 		};
 		if( ! this.getObstructionState() ){
@@ -307,9 +301,8 @@ MqttGarageDoorAccessory.prototype = {
   	},
 
 	getState: function( callback ) {
-		if( this.openStatusCmdTopic !== undefined ) this.client.publish(this.openStatusCmdTopic, this.openStatusCmd); 
-		if( this.closeStatusCmdTopic !== undefined ) this.client.publish(this.closeStatusCmdTopic, this.closeStatusCmd);
-		if( this.reachable) {
+    this.client.publish(this.domostatustopic, this.UpdateStatusCmd);
+				if( this.reachable) {
     			this.log("Garage Door is " + this.doorStateReadable(this.currentDoorState.value) );
                 	callback(null, this.currentDoorState.value);
 //			callback();
@@ -325,8 +318,8 @@ MqttGarageDoorAccessory.prototype = {
 		var obs =  ( ( ( !this.Running ) && (isO == isC ) ) || ( isC && isO ) ) ;
 		this.setObstructionState( obs);
 		return(obs);
-	}, 
-			
+	},
+
 	setObstructionState: function( state ) {
 		if ( state )  {
                    this.currentDoorState.setValue( DoorState.STOPPED );
@@ -335,7 +328,7 @@ MqttGarageDoorAccessory.prototype = {
 		};
                 this.ObstructionDetected.setValue( state );
 		this.showLog("Set Obstruction " + state );
-	},	
+	},
 
 	getServices:  function() {
 		return [this.infoService, this.garageDoorOpener];
