@@ -3,23 +3,18 @@
 // Remember to add accessory to config.json. Example:
 // "accessories": [
 //     {
-//            	"accessory": "mqttgaragedoor",
+//            	"accessory": "domoticzmqttgaragedoor",
 //            	"name": "NAME OF THE GARAGE DOOR OPENER",
 //            	"url": "URL OF THE BROKER",
 //  	      	"username": "USERNAME OF THE BROKER",
 //		"password": "PASSWORD OF THE BROKER"
-// 		"caption": "LABEL OF THE GARAGE DOOR OPENER",
 //		"lwt": "OPTIONAL: DOOR OPENER MQTT LAST WILL AND TESTAMENT TOPIC"
 //		"lwtPayload": "lwt Payload"
 // 		"topics": {
 // 				"statusSet": 	"MQTT TOPIC TO SET THE DOOR OPENER"
-// 				"openGet": 	"OPTIONAL: MQTT TOPIC TO GET THE DOOR OPEN STATUS",
 // 				"openValue": 	"OPTIONAL VALUE THAT MEANS OPEN (DEFAULT true)"
-// 				"closedGet": 	"OPTIONAL: MQTT TOPIC TO GET THE DOOR CLOSED STATUS",
 // 				"closedValue": 	"OPTIONAL VALUE THAT MEANS CLOSED (DEFAULT true)"
-//				"openStatusCmdTopic": "OPTIONAL: MQTT TOPIC TO ASK ABOUT THE OPEN STATUS",
 //				"openStatusCmd": "OPTIONAL: THE OPEN STATUS COMMAND ( DEFAULT "")",
-//				"closeStatusCmdTopic": "OPTIONAL: MQTT TOPIC TO ASK ABOUT THE CLOSED STATUS",
 //				"closeStatusCmd": "OPTIONAL THE CLOSED STATUS COMMAND (DEFAULT "")",
 // 			},
 //              "doorRunInSeconds": "OPEN/CLOSE RUN TIME IN SECONDS (DEFAULT 20"),
@@ -78,15 +73,10 @@ function MqttGarageDoorAccessory(log, config) {
     		rejectUnauthorized: false
 	};
 
-	this.caption		= config["caption"];
-	this.topicOpenGet	= config["topics"].openGet;
-	this.topicClosedGet	= config["topics"].closedGet;
 	this.topicStatusSet	= config["topics"].statusSet;
 	this.OpenValue		= ( config["topics"].openValue !== undefined ) ? config["topics"].openValue : "true";
 	this.ClosedValue	= ( config["topics"].closedValue !== undefined ) ? config["topics"].closedValue : "true";
-	this.openStatusCmdTopic	= config["topics"].openStatusCmdTopic; 
 	this.openStatusCmd	= ( config["topics"].openStatusCmd !== undefined ) ? config["topics"].openStatusCmd : "";
-	this.closeStatusCmdTopic= config["topics"].closeStatusCmdTopic;
 	this.closeStatusCmd	= ( config["topics"].closeStatusCmd !== undefined ) ? config["topics"].closeStatusCmd : "";
 
 	if( this.topicOpenGet != undefined || this.topicClosedGet != undefined ) {
