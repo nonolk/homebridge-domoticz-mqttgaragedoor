@@ -79,8 +79,8 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
   this.domostatustopic = "domoticz/out";
   this.OpenValue		= ( config["topics"].openValue !== undefined ) ? config["topics"].openValue : "on";
 	this.ClosedValue	= ( config["topics"].closedValue !== undefined ) ? config["topics"].closedValue : "off";
-	this.openStatusCmd	= ( config["topics"].openStatusCmd !== undefined ) ? config["topics"].openStatusCmd :"on";
-	this.closeStatusCmd	= ( config["topics"].closeStatusCmd !== undefined ) ? config["topics"].closeStatusCmd : "off";
+	this.openStatusCmd	= '{"command": "switchlight", "idx": '+domoswitch+', "switchcmd": "'+config["topics"].openStatusCmd+'" }';
+	this.closeStatusCmd	= '{"command": "switchlight", "idx": '+domoswitch+', "switchcmd": "'+config["topics"].closeStatusCmd+'" }';;
   this.doorRunInSeconds 	= (config["doorRunInSeconds"] !== undefined ? config["doorRunInSeconds"] : 20 );
 
 		this.topicverbose	= config["topics"].showlog;
