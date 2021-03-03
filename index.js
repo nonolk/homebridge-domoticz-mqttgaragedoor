@@ -84,6 +84,8 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 	this.Closed = true;
 	this.Open = !this.Closed;
 	this.DoorStateChanged = false;
+	this.currentDoorState = false;
+	this.ObstructionDetected = false;
 
 	var that = this;
 
