@@ -1,21 +1,45 @@
 {
-  "name": "homebridge-domoticz-mqttgaragedoor",
-  "version": "0.0.2",
+  "_from": "homebridge-domoticz-mqttgaragedoor@latest",
+  "_id": "homebridge-domoticz-mqttgaragedoor@1.0.0",
+  "_inBundle": false,
+  "_integrity": "sha512-CtkL4ZVzXtBpcP6b4ZjKY2tuiYqfcYP9f3oYHw2S96YPaIkhlCmkZt5TsT3KCdD9G/ofJ/WPeqfOleQbfjDNBg==",
+  "_location": "/homebridge-domoticz-mqttgaragedoor",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "homebridge-domoticz-mqttgaragedoor@latest",
+    "name": "homebridge-domoticz-mqttgaragedoor",
+    "escapedName": "homebridge-domoticz-mqttgaragedoor",
+    "rawSpec": "latest",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/homebridge-domoticz-mqttgaragedoor/-/homebridge-domoticz-mqttgaragedoor-1.0.0.tgz",
+  "_shasum": "2d56dcff3318eaba7807b88b0f305399eebc875c",
+  "_spec": "homebridge-domoticz-mqttgaragedoor@latest",
+  "_where": "/usr",
+  "author": {
+    "name": "Nonolk"
+  },
+  "bugs": {
+    "url": "https://github.com/nonolk/homebridge-domoticz-mqttgaragedoor/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "mqtt": "^1.6.3"
+  },
+  "deprecated": false,
   "description": "Homebridge plugin for MQTT Garage Door Opener for Domoticz",
-  "note": "peerDependencies is hardcoded to peerDepdendencies in homebridge!!!",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "echo \"Error: configure and run homebridge to start\" && exit 1"
-  },
+  "devDependencies": {},
   "engines": {
-    "node": ">4.0.0",
-    "homebridge": ">=0.2.0"
+    "homebridge": ">=0.2.0",
+    "node": ">4.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nonolk/homebridge-domoticz-mqttgaragedoor"
-  },
+  "homepage": "https://github.com/nonolk/homebridge-domoticz-mqttgaragedoor",
   "keywords": [
     "homebridge-plugin",
     "domoticz",
@@ -25,13 +49,17 @@
     "IoT",
     "Garage"
   ],
-  "dependencies": {
-    "mqtt": "^1.6.3"
+  "license": "GPL-2.0-only",
+  "main": "index.js",
+  "name": "homebridge-domoticz-mqttgaragedoor",
+  "note": "peerDependencies is hardcoded to peerDepdendencies in homebridge!!!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nonolk/homebridge-domoticz-mqttgaragedoor.git"
   },
-  "author": "Nonolk",
-  "license": "GPL2",
-  "bugs": {
-    "url": "https://github.com/nonolk/homebridge-domoticz-mqttgaragedoor/issues"
+  "scripts": {
+    "start": "echo \"Error: configure and run homebridge to start\" && exit 1",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "homepage": "https://github.com/nonolk/homebridge-domoticz-mqttgaragedoor"
+  "version": "1.0.1"
 }

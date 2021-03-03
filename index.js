@@ -83,9 +83,7 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 	this.Running = false;
 	this.Closed = true;
 	this.Open = !this.Closed;
-	this.DoorStateChanged = false;
-	this.currentDoorState = false;
-	this.ObstructionDetected = false;
+	this.Startup = true;
 
 	var that = this;
 
@@ -98,10 +96,12 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 	this.targetDoorState = this.garageDoorOpener.getCharacteristic(Characteristic.TargetDoorState);
     	this.targetDoorState
 		.on('set', this.setTargetState.bind(this))
-    		.on('get', this.checkReachable.bind(this));
+    		.onGet(this.handleTargetDoorStateGet.bind(this));
 
 	this.ObstructionDetected = this.garageDoorOpener.getCharacteristic(Characteristic.ObstructionDetected);
-	this.ObstructionDetected.on('get', this.checkReachable.bind(this));
+	this.ObstructionDetected
+		.onGet(this.handleObstructionDetectedGet.bind(this));
+	//this.ObstructionDetected.on('get', this.getObstructionState.bind(this));
 
 	if (this.lwt !== undefined ) this.reachable = false
 	else this.reachable = true;
@@ -237,6 +237,7 @@ DomoticzMqttGarageDoorAccessory.prototype = {
 	},
 
 	checkReachable: function( callback ) {
+		this.showLog('Triggered Check reachable');
 		if( this.reachable ) callback()
 		else callback(1);
 	},
@@ -246,7 +247,8 @@ DomoticzMqttGarageDoorAccessory.prototype = {
 	 	this.showLog("Setting Target :", status);
 		if( this.reachable) {
 			if( status != this.currentDoorState.value ) {
-				this.log(this.currentDoorState.value);
+				this.showLog('Set target');
+				this.showLog(this.currentDoorState.value);
 				this.setObstructionState( false);
 				clearTimeout( this.TimeOut );
         			this.Running = true;
@@ -296,7 +298,7 @@ DomoticzMqttGarageDoorAccessory.prototype = {
  	},
 
 	setFinalDoorState: function() {
-	 	this.ShowLog("Setting Final", this.targetDoorState.value);
+	 	this.showLog("Setting Final", this.targetDoorState.value);
 		this.Running = false;
 		delete this.TimeOut;
 
@@ -333,7 +335,8 @@ DomoticzMqttGarageDoorAccessory.prototype = {
 		var isC = this.isClosed();
 	        var isO = this.isOpen();
 		var obs =  ( ( ( !this.Running ) && (isO == isC ) ) || ( isC && isO ) ) ;
-		this.setObstructionState( obs);
+		this.setObstructionState( obs );
+		this.showLog("Get Obstruction " + obs );
 		return(obs);
 	},
 
@@ -346,6 +349,31 @@ DomoticzMqttGarageDoorAccessory.prototype = {
                 this.ObstructionDetected.setValue( state );
 		this.showLog("Set Obstruction " + state );
 	},
+   
+        handleObstructionDetectedGet() {
+	    	this.showLog('Triggered GET ObstructionDetected');
+		var isC = this.isClosed();
+                var isO = this.isOpen();
+                var obs =  ( ( ( !this.Running ) && (isO == isC ) ) || ( isC && isO ) ) ;
+                this.showLog("Handle Obstruction " + obs );
+
+	    	return obs;
+  	},
+
+	handleTargetDoorStateGet() {
+		this.showLog('Triggered GET TargetDoorState');
+		
+		if(this.Startup) {
+		 this.log('Statup assuming closed');
+    		 var currentValue = DoorState.CLOSED;
+		 this.Startup = false;
+		}
+		else {
+		var currentValue = this.targetDoorState.value;
+		}
+    		return currentValue;
+ 	 },
+
 
 	getServices:  function() {
 		return [this.infoService, this.garageDoorOpener];
