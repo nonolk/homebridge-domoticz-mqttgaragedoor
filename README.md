@@ -8,7 +8,7 @@ The plugin must be cloned locally (git clone https://github.com/nonolk/homebridg
     npm install -g ./homebridge-domoticz-mqttgaragedoor
    
 # Release notes
-Version 0.0.1
+Version 1.0.1
 
 # Configuration
 Remember to configure the plugin in config.json in your home directory inside the .homebridge directory. Configuration parameters:
