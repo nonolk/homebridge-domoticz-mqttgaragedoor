@@ -84,6 +84,7 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 	this.Closed = true;
 	this.Open = !this.Closed;
 	this.Startup = true;
+	this.Obstructed = false;
 
 	var that = this;
 
@@ -101,7 +102,6 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 	this.ObstructionDetected = this.garageDoorOpener.getCharacteristic(Characteristic.ObstructionDetected);
 	this.ObstructionDetected
 		.onGet(this.handleObstructionDetectedGet.bind(this));
-	//this.ObstructionDetected.on('get', this.getObstructionState.bind(this));
 
 	if (this.lwt !== undefined ) this.reachable = false
 	else this.reachable = true;
@@ -110,7 +110,7 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
     	this.infoService
       	   .setCharacteristic(Characteristic.Manufacturer, "Opensource Community and Nonolk")
            .setCharacteristic(Characteristic.Model, "Homebridge Domoticz MQTT GarageDoor")
-	   .setCharacteristic(Characteristic.FirmwareRevision,"0.0.1")
+	   .setCharacteristic(Characteristic.FirmwareRevision,"1.0.2")
            .setCharacteristic(Characteristic.SerialNumber, "20200501");
 
 
@@ -166,13 +166,13 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 				that.StatusFault = that.garageDoorOpener.getCharacteristic(Characteristic.StatusFault);
 			};
 			if (status == that.ClosedValue){
-       				that.log("Received Closed message");
+       				that.log("Received CLOSED message");
 				var topicGotStatus = (status == that.ClosedValue);
 				that.isClosed( topicGotStatus);
 				if( topicGotStatus ) var NewDoorState = DoorState.CLOSED
                         	else var NewTarget = DoorState.OPEN;
 			} else if (status == that.OpenValue){
-				that.log("Received Open message");
+				that.log("Received OPEN message");
 				var topicGotStatus = (status == that.OpenValue);
 				that.isOpen( topicGotStatus);
 				if(topicGotStatus) var NewDoorState = DoorState.OPEN
@@ -181,11 +181,24 @@ function DomoticzMqttGarageDoorAccessory(log, config) {
 
 	        	that.showLog("Getting state " +that.doorStateReadable(NewDoorState) + " its was " + that.doorStateReadable(that.currentDoorState.value) + " [TOPIC : " + topic + " ]");
 			if ( topicGotStatus ) {
-				that.setObstructionState( false );
-        			that.currentDoorState.setValue(NewDoorState);
-	               		that.targetDoorState.updateValue(NewDoorState);
-				that.Running = false;
-				clearTimeout( that.TimeOut );
+			  that.log("Heartbeat");
+				if (that.doorStateReadable(NewDoorState) !== that.doorStateReadable(that.currentDoorState.value)) {
+					that.log("Heartbeat differents");
+					if ((that.doorStateReadable(that.currentDoorState.value) == "OPENING") && (that.doorStateReadable(NewDoorState) == "CLOSED")) {
+					 that.setObstructionState( true );
+					}
+					else if  ((that.doorStateReadable(that.currentDoorState.value) == "CLOSING") && (that.doorStateReadable(NewDoorState) == "OPEN")) {
+					 that.setObstructionState( true );
+					}
+					else if  (that.doorStateReadable(that.currentDoorState.value) == "STOPPED") {
+					 that.setObstructionState( true );
+					}
+					else that.setObstructionState( false );
+        				that.currentDoorState.setValue(NewDoorState);
+	               			that.targetDoorState.updateValue(NewDoorState);
+					that.Running = false;
+					clearTimeout( that.TimeOut );
+				};
 			} else if (!that.Running && that.DoorStateChanged ) {
                        		that.targetDoorState.setValue( NewTarget, undefined, "fromGetValue");
 			};
@@ -252,6 +265,7 @@ DomoticzMqttGarageDoorAccessory.prototype = {
 				this.setObstructionState( false);
 				clearTimeout( this.TimeOut );
         			this.Running = true;
+				this.showLog("Before wait timeout");
 				this.TimeOut = setTimeout(this.setFinalDoorState.bind(this), this.doorRunInSeconds * 1000);
 				if ( context !== 'fromGetValue'){
 					if (status == 0)
@@ -298,6 +312,7 @@ DomoticzMqttGarageDoorAccessory.prototype = {
  	},
 
 	setFinalDoorState: function() {
+		this.showLog("After wait timeout");
 	 	this.showLog("Setting Final", this.targetDoorState.value);
 		this.Running = false;
 		delete this.TimeOut;
@@ -326,7 +341,7 @@ DomoticzMqttGarageDoorAccessory.prototype = {
     			this.log("Garage Door is " + this.doorStateReadable(this.currentDoorState.value) );
                 	callback(null, this.currentDoorState.value);
 		} else {
-			this.log("Offline");
+			this.showLog("Offline");
 			callback(1);
 		}
 	},
@@ -335,29 +350,29 @@ DomoticzMqttGarageDoorAccessory.prototype = {
 		var isC = this.isClosed();
 	        var isO = this.isOpen();
 		var obs =  ( ( ( !this.Running ) && (isO == isC ) ) || ( isC && isO ) ) ;
-		this.setObstructionState( obs );
 		this.showLog("Get Obstruction " + obs );
+		this.setObstructionState( obs );
 		return(obs);
 	},
 
 	setObstructionState: function( state ) {
 		if ( state )  {
                    this.currentDoorState.setValue( DoorState.STOPPED );
+		   this.Obstructed = true;
                    if( !this.isClosed() ) this.targetDoorState.updateValue( DoorState.OPEN)
 		   else this.targetDoorState.updateValue( 1 - this.targetDoorState.value);
-		};
+		}
+		else this.Obstructed = false;
                 this.ObstructionDetected.setValue( state );
 		this.showLog("Set Obstruction " + state );
 	},
    
         handleObstructionDetectedGet() {
 	    	this.showLog('Triggered GET ObstructionDetected');
-		var isC = this.isClosed();
-                var isO = this.isOpen();
-                var obs =  ( ( ( !this.Running ) && (isO == isC ) ) || ( isC && isO ) ) ;
-                this.showLog("Handle Obstruction " + obs );
 
-	    	return obs;
+		this.showLog("Handle Obstruction " + this.Obstructed );
+
+	    	return this.Obstructed;
   	},
 
 	handleTargetDoorStateGet() {
