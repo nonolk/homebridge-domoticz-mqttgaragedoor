@@ -1,6 +1,6 @@
 {
   "_from": "homebridge-domoticz-mqttgaragedoor@latest",
-  "_id": "homebridge-domoticz-mqttgaragedoor@1.0.0",
+  "_id": "homebridge-domoticz-mqttgaragedoor@1.0.3",
   "_inBundle": false,
   "_integrity": "sha512-CtkL4ZVzXtBpcP6b4ZjKY2tuiYqfcYP9f3oYHw2S96YPaIkhlCmkZt5TsT3KCdD9G/ofJ/WPeqfOleQbfjDNBg==",
   "_location": "/homebridge-domoticz-mqttgaragedoor",
@@ -61,5 +61,5 @@
     "start": "echo \"Error: configure and run homebridge to start\" && exit 1",
     "test": "echo \"Error: no test specified\""
   },
-  "version": "1.0.1"
+  "version": "1.0.3"
 }
